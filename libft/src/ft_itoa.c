@@ -12,22 +12,19 @@
 
 #include "libft.h"
 
-static char	ft_itod(double n)
+static char	ft_itod(int n)
 {
-	double	div;
-
-	div = 10;
 	if (n > 9)
 	{
-		ft_itod(n / div);
-		n = fmod(n, div);
+		ft_itod(n / 10);
+		n = n % 10;
 	}
 	return (n + '0');
 }
 
-static double	ft_intlen(double n)
+static int	ft_intlen(int n)
 {
-	double	temp;
+	size_t	temp;
 	size_t	i;
 
 	i = 0;
@@ -49,7 +46,7 @@ static double	ft_intlen(double n)
 	return (i);
 }
 
-char	*ft_itoa(double n)
+char	*ft_itoa(int n)
 {
 	int		i;
 	char	*result;

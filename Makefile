@@ -45,10 +45,10 @@ LIBFT		:=	$(LIBFT_DIR)/libft.a
 LDFLAGS		:=	-L$(LIBFT_DIR) -lft
 
 # Include paths
-INC			:= -I./include -I$(LIBFT_DIR)
+INC			:= -I./include -I$(LIBFT_DIR)/include
 
 # Sources
-SRCS		:=	pipex.c \
+SRCS		:=	main.c \
 
 OBJS		:=	$(addprefix $(OBJ_DIR)/,$(SRCS:.c=.o))
 
@@ -110,21 +110,21 @@ $(LIBFT):
 
 # Remove object files and dependency files
 clean:
-	@echo "$(YELLOW)🧹 Cleaning object files...$(RESET)"
+	@echo "[ ./pipex clean  ] $(YELLOW)🧹 Cleaning object files...$(RESET)"
 	@rm -rf $(OBJ_DIR)
 	@$(MAKE) -C $(LIBFT_DIR) clean --no-print-directory
-	@echo "$(YELLOW)✅ Object files cleaned!$(RESET)"
+	@echo "[ ./pipex clean  ] $(YELLOW)✅ Object files cleaned!$(RESET)"
 
 # Remove everything including the executable
 fclean: clean
-	@echo "$(YELLOW)🧹 Removing $(NAME)...$(RESET)"
+	@echo "[ ./pipex fclean ] $(YELLOW)🧹 Removing $(NAME)...$(RESET)"
 	@rm -rf $(NAME)
 	@$(MAKE) -C $(LIBFT_DIR) fclean --no-print-directory
-	@echo "$(YELLOW)✅ $(NAME) removed!$(RESET)"
+	@echo "[ ./pipex fclean ] $(YELLOW)✅ $(NAME) removed!$(RESET)"
 
 # Full rebuild from scratch
 re: fclean
-	@echo "$(BOLD)$(WHITE)🔄 Rebuilding from scratch...$(RESET)"
+	@echo "[ ./pipex re     ] $(BOLD)$(WHITE)🔄 Rebuilding from scratch...$(RESET)"
 	@$(MAKE) all
 
 # Additional useful targets
