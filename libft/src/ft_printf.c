@@ -12,21 +12,23 @@
 
 #include "libft.h"
 
-static int	ft_puthex(uintptr_t decimal, char conv, int i, int p)
+static int	ft_puthex(uintptr_t decimal, char conv, int fd, int p)
 {
+	int			i;
 	char		hexadecimal[20];
 	const char	*hex_table;
 
 	if (!decimal && conv == 'p')
-		return (write(1, "(nil)", 5));
+		return (write(fd, "(nil)", 5));
 	if (decimal == 0)
-		return (write(1, "0", 1));
+		return (write(fd, "0", 1));
 	if (conv == 'p')
-		p = ft_putstr_fd("0x", 1);
+		p = ft_putstr_fd("0x", fd);
 	if (conv == 'x' || conv == 'p')
 		hex_table = "0123456789abcdef";
 	else
 		hex_table = "0123456789ABCDEF";
+	i = 0;
 	while (decimal)
 	{
 		hexadecimal[i++] = hex_table[decimal & 0xF];
@@ -34,28 +36,28 @@ static int	ft_puthex(uintptr_t decimal, char conv, int i, int p)
 	}
 	hexadecimal[i] = '\0';
 	ft_reverse_string(hexadecimal);
-	ft_putstr_fd(hexadecimal, 1);
+	ft_putstr_fd(hexadecimal, fd);
 	return (i + p);
 }
 
-static int	ft_write_conversion(va_list *args, char conv)
+static int	ft_write_conversion(va_list *args, char conv, int fd)
 {
 	if (conv == 'c')
-		return (ft_putchar_fd((char)va_arg(*args, int), 1));
+		return (ft_putchar_fd((char)va_arg(*args, int), fd));
 	if (conv == 's')
-		return (ft_putstr_fd(va_arg(*args, char *), 1));
+		return (ft_putstr_fd(va_arg(*args, char *), fd));
 	if (conv == 'p')
-		return (ft_puthex((uintptr_t)va_arg(*args, void *), conv, 0, 0));
+		return (ft_puthex((uintptr_t)va_arg(*args, void *), conv, fd, 0));
 	if (conv == 'x' || conv == 'X')
-		return (ft_puthex((unsigned)va_arg(*args, unsigned), conv, 0, 0));
+		return (ft_puthex((unsigned)va_arg(*args, unsigned), conv, fd, 0));
 	if (conv == 'd' || conv == 'i')
-		return (ft_putnbr_fd((int)va_arg(*args, int), 1));
+		return (ft_putnbr_fd((int)va_arg(*args, int), fd));
 	if (conv == 'u')
-		return (ft_uputnbr_fd((unsigned)va_arg(*args, unsigned), 1));
-	return (write(1, "%", 1));
+		return (ft_uputnbr_fd((unsigned)va_arg(*args, unsigned), fd));
+	return (write(fd, "%", 1));
 }
 
-int	ft_printf(const char *format, ...)
+int	ft_printf(int fd, const char *format, ...)
 {
 	va_list	args;
 	int		count;
@@ -72,10 +74,11 @@ int	ft_printf(const char *format, ...)
 	while (*format)
 	{
 		if (*format == '%' && format[1] && ft_strchr("cspxXdiu%", format[1]))
-			count += ft_write_conversion(&args, *++format);
+			count += ft_write_conversion(&args, *++format, fd);
 		else
-			count += write(1, &*format, 1);
+			count += write(fd, &*format, 1);
 		format++;
 	}
-	return (va_end(args), count);
+	va_end(args);
+	return (count);
 }

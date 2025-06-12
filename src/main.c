@@ -11,244 +11,269 @@
 /* ************************************************************************** */
 
 #include "pipex.h"
+#include <asm-generic/errno-base.h>
 #include <asm-generic/errno.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-void	exit_handler(int code, char *param)
+void	exit_handler(int code, char *param1, void *param2)
 {
+	t_pipex	*p;
+	int		i;
+
+	p = (t_pipex *)param2;
+	if (p)
+	{
+		if (p->fd1 >= 0)
+			close(p->fd1);
+		if (p->fd2 >= 0)
+			close(p->fd2);
+		if (p->fd3 >= 0)
+			close(p->fd3);
+		if (p->fd4 >= 0)
+			close(p->fd4);
+		if (p->path)
+			free(p->path);
+		i = 0;
+		if (p->cmd_args)
+		{
+			while (p->cmd_args[i])
+				free(p->cmd_args[i++]);
+			free(p->cmd_args);
+		}
+		free(p);
+	}
 	errno = code;
-	perror(param);
+	if (param1)
+		perror(param1);
 	exit(code);
 }
 
-void	free_handler(char **array)
+void	free_handler_exit(t_pipex *p, char **array1, char **array2, bool status)
 {
 	int	i;
 
-	i = 0;
-	while (array[i])
+	if (array1)
 	{
-		free(array[i]);
-		i++;
+		i = 0;
+		while (array1[i])
+			free(array1[i++]);
+		free(array1);
 	}
-	free(array);
-	array = NULL;
+	if (array2)
+	{
+		i = 0;
+		while (array2[i])
+			free(array2[i++]);
+		free(array2);
+	}
+	if (status == true)
+		exit_handler(127, NULL, p);
+	return ;
 }
 
-char	**get_cmd_args(char *av_cmd, char *av_file, char *path)
+char	**get_cmd_args(t_pipex *p, char *av_cmd)
 {
-	char	**cmd_args;
-	char	**cmd1;
-	int		size;
+	char	**tokens;
+	char	**args;
 	int		i;
 
-	size = 0;
-	cmd1 = ft_split(av_cmd, ' ');
-	if (!cmd1)
-		free_handler(cmd1);
-	if (av_file != NULL)
-		size++;
+	args = ft_split(av_cmd, ' ');
+	if (!args)
+		free_handler_exit(p, NULL, NULL, true);
 	i = 0;
-	while (av_cmd[i++])
-		size++;
-	cmd_args = malloc(size * sizeof(char *));
-	if (!cmd_args)
-	{
-		free_handler(cmd1);
-		return (NULL);
-	}
-	cmd_args[0] = ft_strdup(path);
-	if (!cmd_args[0])
-	{
-		free_handler(cmd1);
-		free_handler(cmd_args);
-		return (NULL);
-	}
-	i = 1;
-	while (cmd1[i] != NULL)
-	{
-		cmd_args[i] = ft_strdup(cmd1[i]);
-		if (!cmd_args[i])
-		{
-			free_handler(cmd1);
-			free_handler(cmd_args);
-			return (NULL);
-		}
+	while (args[i])
 		i++;
-	}
-	if (av_file != NULL)
+	tokens = malloc((i + 1) * sizeof(char *));
+	if (!tokens)
+		free_handler_exit(p, args, NULL, true);
+	tokens[0] = ft_strdup(p->path);
+	if (!tokens[0])
+		free_handler_exit(p, args, tokens, true);
+	i = 0;
+	while (args[i])
 	{
-		cmd_args[i] = ft_strdup(av_file);
-		if (!cmd_args[i])
-		{
-			free_handler(cmd1);
-			free_handler(cmd_args);
-			return (NULL);
-		}
-		i++;
+		tokens[i] = ft_strdup(args[i]);
+		if (!tokens[i++])
+			free_handler_exit(p, args, tokens, true);
 	}
-	free_handler(cmd1);
-	cmd_args[i] = NULL;
-	return (cmd_args);
+	tokens[i] = NULL;
+	free(args);
+	return (tokens);
 }
 
-char	*get_bin_path(char *av_index, char **env)
+char	**parse_paths(char **env)
 {
 	char	**env_paths;
-	char	*current_path;
-	char	**cmd1;
 	int		i;
 
 	i = 0;
-	while (env[i])
-	{
+	while (env[i++])
 		if (ft_strnstr(env[i], "PATH=", 5))
 			break ;
-		i++;
-	}
 	if (ft_strnstr(env[i], "PATH=", 5) == NULL)
 		return (NULL);
 	env_paths = ft_split(env[i] + 5, ':');
 	if (!env_paths)
 		return (NULL);
-	cmd1 = ft_split(av_index, ' ');
-	if (!cmd1)
-	{
-		free_handler(env_paths);
-		return (NULL);
-	}
-	char *temp = ft_strjoin("/", cmd1[0]);
-	if (!temp)
-	{
-		free_handler(env_paths);
-		free_handler(cmd1);
-		return (NULL);
-	}
-	free(cmd1[0]);
-	cmd1[0] = temp;
-	if (!cmd1[0])
-	{
-		free_handler(env_paths);
-		free_handler(cmd1);
-		return (NULL);
-	}
+	return (env_paths);
+}
+
+char	*find_bin_in_path(char **env_paths, char *cmd)
+{
+	char	*current_path;
+	int		i;
+	bool	check;
+
 	i = 0;
+	check = false;
 	while (env_paths[i] != NULL)
 	{
-		current_path = ft_strjoin(env_paths[i], cmd1[0]);
+		current_path = ft_strjoin(env_paths[i], cmd);
 		if (!current_path)
-		{
-			free_handler(env_paths);
-			free_handler(cmd1);
 			return (NULL);
-		}
 		if (access(current_path, X_OK) == -1)
 			i++;
 		else
 		{
-			free_handler(env_paths);
-			free_handler(cmd1);
-			return (current_path);
+			check = true;
+			break ;
 		}
 		free(current_path);
-		current_path = NULL;
 	}
-	free_handler(cmd1);
-	free_handler(env_paths);
-	return (NULL);
+	if (check == false)
+		return (NULL);
+	return (current_path);
+}
+
+void	get_bin_path(t_pipex *p, char *av_index, char **env)
+{
+	char	**env_paths;
+	char	**args;
+	char	*cmd;
+
+	env_paths = parse_paths(env);
+	if (!env_paths)
+		exit_handler(127, "Error", p);
+	args = ft_split(av_index, ' ');
+	if (!args)
+		free_handler_exit(p, env_paths, NULL, true);
+	cmd = ft_strjoin("/", args[0]);
+	if (!cmd)
+		free_handler_exit(p, env_paths, args, true);
+	p->path = find_bin_in_path(env_paths, cmd);
+	if (!p->path)
+	{
+		free(cmd);
+		free_handler_exit(p, env_paths, args, true);
+	}
+	free(cmd);
+	free_handler_exit(p, env_paths, args, false);
+}
+
+void	child_process(t_pipex *p, int *pipefd, char *av, char **env)
+{
+	dup2(pipefd[0], STDIN_FILENO);
+	dup2(p->fd2, STDOUT_FILENO);
+	close(pipefd[1]);
+	close(pipefd[0]);
+	get_bin_path(p, av, env);
+	if (!p->path)
+		exit_handler(127, "Error", p);
+	p->cmd_args = get_cmd_args(p, av);
+	if (!p->cmd_args)
+	{
+		if (p->fd4 > 0)
+			exit_handler(126, "Error", p);
+		exit_handler(127, "Error", p);
+	}
+	execve(p->path, p->cmd_args, env);
+	exit(errno);
 }
 
 int	main(int ac, char **av, char **env)
 {
-	int		status;
-	pid_t	cmd1;
-	char	*path;
-	char	**cmd_args;
 	int		pipefd[2];
-	int		fd1;
-	int		fd2;
+	t_pipex	*p;
 
 	if (ac != 5)
 	{
-		if (ac > 5)
-			errno = E2BIG;
-		else
-			errno = EINVAL;
-		exit_handler(errno, "Error");
+		ft_printf(STDERR_FILENO, "\033[31mError: Bad arguments\n\e[0m\n");
+		exit_handler(EINVAL, "Error", NULL);
 	}
-	fd1 = open(av[1], O_RDWR, 0644);
-	if (fd1 < 0)
-		exit_handler(2, av[1]);
-	fd2 = open(av[4], O_RDWR | O_TRUNC | O_CREAT, 0644);
-	if (fd1 < 0 || fd2 < 0)
+	p = ft_calloc(1, sizeof(t_pipex));
+	if (!p)
+		exit_handler(1, "Error", p);
+	p->fd1 = open(av[1], O_RDONLY, 0777);
+	p->fd2 = open(av[4], O_WRONLY | O_TRUNC | O_CREAT, 0777);
+	p->fd3 = open(av[2], O_DIRECTORY);
+	p->fd4 = open(av[3], O_DIRECTORY);
+	if (p->fd1 < 0)
 	{
-		close(fd1);
-		close(fd2);
-		errno = EISDIR;
-		exit_handler(1, "Error");
+		p->fd1 = open(av[1], O_DIRECTORY, 0777);
+		if (p->fd1 > 0)
+		{
+			ft_printf(STDERR_FILENO, "%s: Is a directory\n", av[1]);
+			exit_handler(1, NULL, p);
+		}
+		exit_handler(1, av[1], p);
 	}
+	if (p->fd2 < 0)
+	{
+		p->fd2 = open(av[4], O_DIRECTORY, 0644);
+		if (p->fd2 > 0)
+		{
+			ft_printf(STDERR_FILENO, "%s: Is a directory\n", av[1]);
+			exit_handler(1, NULL, p);
+		}
+		exit_handler(1, av[4], p);
+	}
+	if (p->fd4 > 0)
+		exit_handler(126, "Error", p);
+	if (p->fd3 > 0)
+		exit_handler(126, "Error", p);
+
+
+
+
+
+
 	pipe(pipefd);
 	if (pipefd < 0)
-		exit_handler(errno, "Error");
-	if ((cmd1 = fork()))
+		exit_handler(errno, "Error", p);
+
+
+	p->pid1 = fork();
+	if (p->pid1 == 0)
 	{
-		if ((cmd1 = fork()))
-		{
-			//printf("child2 - start\n");
-			fflush(stdout);
-			dup2(pipefd[0], STDIN_FILENO);
-			close(pipefd[1]);
-			path = get_bin_path(av[3], env);
-			if (!path)
-			{
-				exit_handler(1, "Error");
-			}
-			cmd_args = get_cmd_args(av[3], NULL, path);
-			if (!cmd_args)
-			{
-				free(path);
-				exit_handler(1, "Error");
-			}
-			dup2(fd2, STDOUT_FILENO);
-			execve(path, cmd_args, env);
-			free(path);
-			path = NULL;
-			free_handler(cmd_args);
-			close(pipefd[0]);
-			exit(errno);
-		}
-		//printf("child1 - start\n");
-		fflush(stdout);
+		dup2(p->fd1, pipefd[0]);
+		dup2(pipefd[0], STDIN_FILENO);
 		dup2(pipefd[1], STDOUT_FILENO);
 		close(pipefd[0]);
-		path = get_bin_path(av[2], env);
-		if (!path)
-		{
-			exit_handler(127, "Error");
-		}
-		cmd_args = get_cmd_args(av[2], NULL, path);
-		if (!cmd_args)
-		{
-			free(path);
-			exit_handler(1, "Error");
-		}
-		dup2(fd1, STDIN_FILENO);
-		execve(path, cmd_args, env);
-		free(path);
-		path = NULL;
-		free_handler(cmd_args);
 		close(pipefd[1]);
+		get_bin_path(p, av[2], env);
+		if (!p->path)
+			exit_handler(127, "Error", p);
+		p->cmd_args = get_cmd_args(p, av[2]);
+		if (!p->cmd_args)
+			exit_handler(127, "Error", p);
+		execve(p->path, p->cmd_args, env);
 		exit(errno);
 	}
-	else
-	{
-		waitpid(cmd1, &status, 0);
-		//printf("parent1 - start\n");
-		close(pipefd[0]);
-		close(pipefd[1]);
-	}
-	close(fd1);
-	close(fd2);
-	return (0);
+	p->pid2 = fork();
+	if (p->pid2 == 0)
+		child_process(p, pipefd, av[3], env);
+
+	close(pipefd[0]);
+	close(pipefd[1]);
+	waitpid(p->pid1, &p->status, 0);
+	waitpid(p->pid2, &p->status, 0);
+	// return (WEXITSTATUS(p->status));
+	p->status = (((p->status) & 0xff00) >> 8);
+	exit_handler(p->status, NULL, p);
+
 }
