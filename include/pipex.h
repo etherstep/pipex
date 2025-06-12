@@ -20,5 +20,7 @@
 # include <stdio.h>
 # include <sys/wait.h>
 # include <sys/types.h>
+# include <string.h>
+# include <errno.h>
 
 #endif // PIPEX_H

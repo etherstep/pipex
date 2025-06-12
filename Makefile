@@ -10,7 +10,28 @@
 #                                                                              #
 # **************************************************************************** #
 
-# Colors and formatting
+# ============================== CONFIGURATION =============================== #
+
+NAME		:=	pipex
+CC			:=	cc
+CFLAGS		:=	-Wextra -Wall -Werror
+DEBUG_FLAGS	:=	-g3 -fsanitize=address -fsanitize=undefined
+OPTFLAGS	:=	-O2
+
+SRC_DIR		:= src
+OBJ_DIR		:= obj
+
+DEP_DIR		:= $(OBJ_DIR)/.deps
+DEPFLAGS	= -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.d
+
+LIBFT_DIR	:=	libft
+LIBFT		:=	$(LIBFT_DIR)/libft.a
+INC			:= -I./include -I$(LIBFT_DIR)/include
+
+LDFLAGS		:=	-L$(LIBFT_DIR) -lft
+
+# ============================== VISUAL STYLING ============================== #
+
 BOLD		:= $(shell tput bold)
 GREEN		:= $(shell tput setaf 2)
 YELLOW		:= $(shell tput setaf 3)
@@ -20,65 +41,38 @@ CYAN		:= $(shell tput setaf 6)
 WHITE		:= $(shell tput setaf 7)
 RESET		:= $(shell tput sgr0)
 
-# Program name
-NAME		:=	pipex
+# ============================== SOURCE FILES ================================ #
 
-# Compiler flags
-CC			:=	cc
-CFLAGS		:=	-Wextra -Wall -Werror
-OPTFLAGS	:=	-O2
-DEBUG_FLAGS	:=	-g3 -fsanitize=address -fsanitize=undefined
-
-# Directories
-OBJ_DIR		:= obj
-SRC_DIR		:= src
-
-# Dependencies tracking
-DEP_DIR		:= $(OBJ_DIR)/.deps
-DEPFLAGS	= -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.d
-
-# Libraries
-LIBFT_DIR	:=	libft
-LIBFT		:=	$(LIBFT_DIR)/libft.a
-
-# Additional flags
-LDFLAGS		:=	-L$(LIBFT_DIR) -lft
-
-# Include paths
-INC			:= -I./include -I$(LIBFT_DIR)/include
-
-# Sources
-SRCS		:=	main.c \
-
+SRCS		:=	main.c
 OBJS		:=	$(addprefix $(OBJ_DIR)/,$(SRCS:.c=.o))
 
-# Calculating SRCS amount
-TOTAL_SRCS	:=	$(words $(SRCS))
+# ============================== PROGRESS TRACKING =========================== #
 
-# Create progress file for tracking compilation
+TOTAL_SRCS	:=	$(words $(SRCS))
 PROGRESS_FILE := $(OBJ_DIR)/.progress
 
-# Default target
+# ============================== BUILD TARGETS =============================== #
+
 all:
-	@if [ -f $(NAME) ] && $(MAKE) -q $(NAME); then \
-		echo "$(BOLD)$(YELLOW)🔄 $(NAME) is already up to date.$(RESET)"; \
+	@if [ -f $(NAME) ] && $(MAKE) -q $(NAME) --no-print-directory; then \
+		echo ">$(BOLD)$(YELLOW)  $(NAME) is already up to date.$(RESET)"; \
 	else \
-		echo "$(BOLD)$(WHITE)🌀 Starting to build $(NAME)...$(RESET)"; \
+		echo ">$(BOLD)$(WHITE) Starting to build $(NAME)...$(RESET)"; \
 		$(MAKE) $(NAME) --no-print-directory; \
-		echo "$(BOLD)$(GREEN)✅ All components built successfully!$(RESET)"; \
+		echo ">$(BOLD)$(GREEN)  All components built successfully!$(RESET)"; \
 	fi
 
 # Debug target
 debug: CFLAGS += $(DEBUG_FLAGS)
 debug: OPTFLAGS := -O0
 debug: clean $(NAME)
-	@echo "$(BOLD)$(CYAN)🐛 Debug build completed!$(RESET)"
+	@echo "$(BOLD)$(CYAN)  Debug build completed!$(RESET)"
 
 # Main executable target - links all objects and libraries
 $(NAME): $(OBJS) $(LIBFT)
-	@echo "$(BOLD)$(GREEN)🔗 Linking $(NAME)...$(RESET)"
+	@echo ">$(BOLD)$(GREEN)  Linking $(NAME)...$(RESET)"
 	@$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(OPTFLAGS)
-	@echo "$(BOLD)$(GREEN)✅ $(NAME) successfully compiled!$(RESET)"
+	@echo ">$(BOLD)$(GREEN)  $(NAME) successfully compiled!$(RESET)"
 	@rm -f $(PROGRESS_FILE)
 
 # Create necessary directories if they don't exist
@@ -91,11 +85,13 @@ $(DEP_DIR): | $(OBJ_DIR)
 
 # Compilation rule for each source file
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR) $(DEP_DIR)
+	@touch $(PROGRESS_FILE)
+	@echo ">$(BOLD)$(WHITE) Compiling $(NAME) srcs...$(RESET)"
 	@if [ -f $(PROGRESS_FILE) ]; then \
 		CURRENT=$$(cat $(PROGRESS_FILE)); \
 		NEXT=$$((CURRENT + 1)); \
 		echo "$$NEXT" > $(PROGRESS_FILE); \
-		printf "🔧 [%3d%%] $(BOLD)$(BLUE)Compiling $<...$(RESET)\n" \
+		printf ">   [%3d%%] $(CYAN)Compiling $<...$(RESET)\n" \
 			$$((NEXT*100/$(TOTAL_SRCS))); \
 	fi
 	@$(CC) $(CFLAGS) $(DEPFLAGS) $(OPTFLAGS) -c $< -o $@ $(INC)
@@ -105,27 +101,43 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR) $(DEP_DIR)
 
 # build libft if needed
 $(LIBFT):
-	@echo "$(MAGENTA)📚 Building libft library...$(RESET)"
+	@echo ">$(MAGENTA)  Entering libft directory...$(RESET)"
 	@$(MAKE) -C $(LIBFT_DIR) --no-print-directory
 
 # Remove object files and dependency files
 clean:
-	@echo "[ ./pipex clean  ] $(YELLOW)🧹 Cleaning object files...$(RESET)"
-	@rm -rf $(OBJ_DIR)
-	@$(MAKE) -C $(LIBFT_DIR) clean --no-print-directory
-	@echo "[ ./pipex clean  ] $(YELLOW)✅ Object files cleaned!$(RESET)"
+	@if [ -d $(OBJ_DIR) ]; then \
+		echo "> [ pipex ] $(YELLOW) Cleaning object files...$(RESET)"; \
+		rm -rf $(OBJ_DIR); \
+		echo "            $(YELLOW) Object files cleaned!$(RESET)"; \
+	else \
+		echo "> [ pipex ] $(BOLD)$(YELLOW) Nothing to be done with $(RESET)$(WHITE)clean$(RESET)"; \
+	fi
+	@if [ -d $(LIBFT_DIR)/$(OBJ_DIR) ]; then \
+		$(MAKE) -C $(LIBFT_DIR) clean --no-print-directory; \
+	else \
+		echo "> [ libft ] $(BOLD)$(YELLOW) Nothing to be done with $(RESET)$(WHITE)clean$(RESET)"; \
+	fi
 
 # Remove everything including the executable
 fclean: clean
-	@echo "[ ./pipex fclean ] $(YELLOW)🧹 Removing $(NAME)...$(RESET)"
-	@rm -rf $(NAME)
-	@$(MAKE) -C $(LIBFT_DIR) fclean --no-print-directory
-	@echo "[ ./pipex fclean ] $(YELLOW)✅ $(NAME) removed!$(RESET)"
+	@if [ -f $(NAME) ]; then \
+		echo "> [ pipex ] $(YELLOW) Removing $(NAME)...$(RESET)"; \
+		rm -rf $(NAME); \
+		echo "            $(YELLOW) $(NAME) removed!$(RESET)"; \
+	else \
+		echo "> [ pipex ] $(BOLD)$(YELLOW) Nothing to be done with $(RESET)$(WHITE)fclean$(RESET)"; \
+	fi
+	@if [ -f $(LIBFT) ]; then \
+		$(MAKE) -C $(LIBFT_DIR) fclean --no-print-directory; \
+	else \
+		echo "> [ libft ] $(BOLD)$(YELLOW) Nothing to be done with $(RESET)$(WHITE)fclean$(RESET)"; \
+	fi
 
 # Full rebuild from scratch
 re: fclean
-	@echo "[ ./pipex re     ] $(BOLD)$(WHITE)🔄 Rebuilding from scratch...$(RESET)"
-	@$(MAKE) all
+	@echo "> [ pipex ] $(BOLD)$(WHITE) Rebuilding from scratch...$(RESET)"
+	@$(MAKE) all --no-print-directory
 
 # Additional useful targets
 help:

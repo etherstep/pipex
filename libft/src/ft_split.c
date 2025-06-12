@@ -12,16 +12,16 @@
 
 #include "libft.h"
 
-static size_t	ft_get_word_len(const char *str, char c)
+static size_t	ft_get_word_len(const char *arr, char c)
 {
 	size_t	size;
 	size_t	i;
 
 	size = 0;
 	i = 0;
-	while (str[i] != '\0' && str[i] == c)
+	while (arr[i] != '\0' && arr[i] == c)
 		i++;
-	while (str[i] != '\0' && str[i] != c)
+	while (arr[i] != '\0' && arr[i] != c)
 	{
 		size++;
 		i++;
@@ -29,7 +29,7 @@ static size_t	ft_get_word_len(const char *str, char c)
 	return (size);
 }
 
-static size_t	ft_words_in_s(char const *s, char c)
+static size_t	ft_words_in_s(const char *s, char c)
 {
 	size_t	count;
 	size_t	i;
@@ -43,7 +43,7 @@ static size_t	ft_words_in_s(char const *s, char c)
 	}
 	count = 0;
 	i = 0;
-	if (s[i] && s[i] != c)
+	if (s[i] && s[i + 1] && s[i] != c)
 		count++;
 	while (s[i])
 	{
@@ -54,67 +54,68 @@ static size_t	ft_words_in_s(char const *s, char c)
 	return (count);
 }
 
-static void	ft_free(char **str)
+static void	ft_free(char **arr)
 {
 	size_t	i;
 
+	if (!arr)
+		return ;
 	i = 0;
-	while (str[i])
+	while (arr[i])
 	{
-		free(str[i]);
+		free(arr[i]);
 		i++;
 	}
-	free(str);
+	free(arr);
 }
 
-static char	*ft_find_charset(const char **str, char c)
+static char	*ft_find_char(const char **arr, char c)
 {
 	char	*buffer;
 	size_t	i;
 
-	while (**str != '\0' && **str == c)
-		(*str)++;
-	buffer = (char *) malloc(ft_get_word_len(*str, c) + 1);
+	while (**arr != '\0' && **arr == c)
+		(*arr)++;
+	i = ft_get_word_len(*arr, c);
+	buffer = malloc(i + 1);
 	if (!buffer)
 		return (NULL);
 	i = 0;
-	while (**str != '\0' && **str != c)
+	while (**arr != '\0' && **arr != c)
 	{
-		buffer[i] = **str;
+		buffer[i] = **arr;
 		i++;
-		(*str)++;
+		(*arr)++;
 	}
 	buffer[i] = '\0';
-	while (**str != '\0' && **str == c)
-		(*str)++;
+	while (**arr != '\0' && **arr == c)
+		(*arr)++;
 	return (buffer);
 }
 
-char	**ft_split(char const *s, char c)
+char	**ft_split(const char *s, char c)
 {
-	char	**splitted_strs;
+	char	**result;
 	size_t	i;
+	size_t	word_count;
 
 	if (!s)
 		return (NULL);
-	splitted_strs = malloc((ft_words_in_s(s, c) + 1) * sizeof(char *));
-	if (!splitted_strs)
+	word_count = ft_words_in_s(s, c);
+	result = malloc((word_count + 1) * sizeof(char *));
+	if (!result)
 		return (NULL);
 	i = 0;
-	if (!*s || (c == '\0' && *s == '\0') || ft_words_in_s(s, c) == 0)
-		return ((splitted_strs[0] = NULL), splitted_strs);
-	while (*s)
+	while (*s && i < word_count)
 	{
-		splitted_strs[i] = ft_find_charset(&s, c);
-		if (!splitted_strs[i])
+		result[i] = ft_find_char(&s, c);
+		if (!result[i])
 		{
-			ft_free(splitted_strs);
+			ft_free(result);
 			return (NULL);
 		}
-		if (*s == '\0')
-			break ;
 		i++;
 	}
-	splitted_strs[i + 1] = NULL;
-	return (splitted_strs);
+	result[i] = NULL;
+	return (result);
 }
