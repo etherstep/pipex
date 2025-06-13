@@ -187,30 +187,40 @@ void	get_bin_path(t_pipex *p, char *av_index, char **env)
 	free_handler_exit(p, env_paths, args, false);
 }
 
-void	child_process(t_pipex *p, char *av, char **env)
+// void	child_process(t_pipex *p, int *pipefd, char *av, char **env)
+// {
+// 	dup2(pipefd[0], STDIN_FILENO);
+// 	dup2(p->fd2, STDOUT_FILENO);
+// 	close(pipefd[1]);
+// 	close(pipefd[0]);
+// 	get_bin_path(p, av, env);
+// 	if (!p->path)
+// 		exit_handler(127, "Error", p);
+// 	p->cmd_args = get_cmd_args(p, av);
+// 	if (!p->cmd_args)
+// 	{
+// 		if (p->fd4 > 0)
+// 			exit_handler(126, "Error", p);
+// 		exit_handler(127, "Error", p);
+// 	}
+// 	execve(p->path, p->cmd_args, env);
+// 	exit(errno);
+// }
+
+void	child_process(t_pipex *p, int *pipefd, char *av, char **env)
 {
-	if (p->pipefd_index == 0)
+	if (p->child == 0)
 	{
 		dup2(p->fd1, STDIN_FILENO);
-		dup2(p->pipefd[0][WRITE], STDOUT_FILENO);
+		dup2(pipefd[1], STDOUT_FILENO);
 	}
-	else if (p->pipefd_index == p->pipe_count)
+	if (p->child == 1)
 	{
-		dup2(p->pipefd[p->pipefd_index - 1][READ], STDIN_FILENO);
 		dup2(p->fd2, STDOUT_FILENO);
+		dup2(pipefd[0], STDIN_FILENO);
 	}
-	else
-	{
-		dup2(p->pipefd[p->pipefd_index - 1][READ], STDIN_FILENO);
-		dup2(p->pipefd[p->pipefd_index][WRITE], STDOUT_FILENO);
-	}
-	int i = 0;
-	while (i < p->cmd_count - 1)
-	{
-		close(p->pipefd[i][0]);
-		close(p->pipefd[i][1]);
-		i++;
-	}
+	close(pipefd[1]);
+	close(pipefd[0]);
 	get_bin_path(p, av, env);
 	if (!p->path)
 		exit_handler(127, "Error", p);
@@ -224,19 +234,20 @@ void	child_process(t_pipex *p, char *av, char **env)
 
 int	main(int ac, char **av, char **env)
 {
+	int		**pipefd;
 	t_pipex	*p;
 
-	if (ac < 5)
-	{
-		ft_printf(STDERR_FILENO, "Error: Invalid amount of arguments!\n");
-		exit_handler(1, NULL, NULL);
-	}
+	// if (ac != 5)
+	// {
+	// 	ft_printf(STDERR_FILENO, "Error: Invalid amount of arguments!\n");
+	// 	exit_handler(1, NULL, NULL);
+	// }
 	p = ft_calloc(1, sizeof(t_pipex));
 	if (!p)
 		exit_handler(1, "Error", p);
 
 	p->fd1 = open(av[1], O_RDONLY, 0777);
-	p->fd2 = open(av[ac - 1], O_WRONLY | O_TRUNC | O_CREAT, 0644);
+	p->fd2 = open(av[4], O_WRONLY | O_TRUNC | O_CREAT, 0777);
 	if (p->fd1 < 0)
 	{
 		if (p->fd2 >= 0)
@@ -252,80 +263,125 @@ int	main(int ac, char **av, char **env)
 		if (errno == EACCES)
 		{
 			if (p->fd2 < 0)
-				ft_printf(STDERR_FILENO, "%s: Permssion denied\n", av[ac - 1]);
+				ft_printf(STDERR_FILENO, "%s: Permssion denied\n", av[4]);
 			ft_printf(STDERR_FILENO, "%s: Permssion denied\n", av[1]);
 			exit_handler(1, NULL, p);
 		}
 		ft_printf(STDERR_FILENO, "%s: No such file or directory\n", av[1]);
 		exit_handler(1, NULL, p);
 	}
+
+
 	if (p->fd2 < 0)
 	{
 		if (errno == EISDIR)
 		{
-			ft_printf(STDERR_FILENO, "%s: Is a directory\n", av[ac - 1]);
+			ft_printf(STDERR_FILENO, "%s: Is a directory\n", av[1]);
 			exit_handler(1, NULL, p);
 		}
-		exit_handler(1, av[ac - 1], p);
+		exit_handler(1, av[4], p);
 	}
 
 
-	int i;
-	p->cmd_count = ac - 3;
-	p->pipe_count = p->cmd_count - 1;
-	p->pipefd = ft_calloc(p->pipe_count, sizeof(int *));
-	if (!p->pipefd)
-		free_handler_exit(p, NULL, NULL, true);
-
-	i = 0;
-	while (i < p->pipe_count)
-		p->pipefd[i++] = ft_calloc(2, sizeof(int));
-
-	i = 0;
-	while (i < p->pipe_count)
+	p->fd3 = open(av[2], O_DIRECTORY);
+	p->fd4 = open(av[3], O_DIRECTORY);
+	if (p->fd3 >= 0)
 	{
-		pipe(p->pipefd[i]);
-		if (p->pipefd[i] < 0)
+		ft_printf(STDERR_FILENO, "Error: command not found: %s\n", av[2]);
+		if (p->fd4 >= 0)
+		{
+			ft_printf(STDERR_FILENO, "Error: command not found: %s\n", av[3]);
+			exit_handler(126, NULL, p);
+		}
+		if (p->fd4 < 0)
+		{
+			exit_handler(0, NULL, p);	
+		}
+		exit_handler(127, NULL, p);
+	}
+
+	if (p->fd4 >= 0)
+	{
+		ft_printf(STDERR_FILENO, "Error: command not found: %s\n", av[3]);
+		exit_handler(126, NULL, p);
+	}
+	
+	// p->pid1 = fork();
+	// if (p->pid1 == 0)
+	// {
+	// 	dup2(p->fd1, pipefd[0]);
+	// 	dup2(pipefd[0], STDIN_FILENO);
+	// 	dup2(pipefd[1], STDOUT_FILENO);
+	// 	close(pipefd[0]);
+	// 	close(pipefd[1]);
+	// 	get_bin_path(p, av[2], env);
+	// 	if (!p->path)
+	// 		exit_handler(127, "Error", p);
+	// 	p->cmd_args = get_cmd_args(p, av[2]);
+	// 	if (!p->cmd_args)
+	// 		exit_handler(127, "Error", p);
+	// 	execve(p->path, p->cmd_args, env);
+	// 	exit(errno);
+	// }
+	// p->pid2 = fork();
+	// if (p->pid2 == 0)
+	// 	child_process(p, pipefd, av[3], env);
+
+	// close(pipefd[0]);
+	// close(pipefd[1]);
+	
+	int i;
+	pipefd = ft_calloc(ac - 4, sizeof(int *));
+	i = 0;
+	while (i < ac - 4)
+	{
+		pipefd[i] = ft_calloc(2, sizeof(int));
+		i++;
+	}
+
+	i = 0;
+	while (i < ac - 4)
+	{
+		pipe(pipefd[i]);
+		if (pipefd[i] < 0)
 			exit_handler(errno, "Error", p);
 		i++;
 	}
-	p->pid = ft_calloc(p->cmd_count, sizeof(int));
 
+	pid_t pid[ac - 3];
 	i = 0;
-	while (i < p->cmd_count)
+	int j = 0;
+	while (i < ac - 3)
 	{
-		p->pipefd_index = i;
-		p->pid[i] = fork();
-		if (p->pid[i] == 0)
+		p->child = i;
+		pid[i] = fork();
+		if (pid[i] == 0)
 		{
-			if (i == 0)
-				child_process(p, av[i + 2], env);
-			else if (i == p->cmd_count - 1)
-				child_process(p, av[i + 2], env);
-			else
-				child_process(p, av[i + 2], env);
-		}
-		else
-		{
-			if (i > 0)
-			{
-				close(p->pipefd[i - 1][0]);
-				close(p->pipefd[i - 1][1]);
-			}
+			if (i > 2)
+				j++;
+			child_process(p, pipefd[j], av[i + 2], env);
 		}
 		i++;
 	}
 
 	i = 0;
-	while(i < p->cmd_count)
-		waitpid(p->pid[i++], &p->status, 0);
-
-	i = 0;
-	while (i < p->pipe_count)
+	while (i < ac - 4)
 	{
-		close(p->pipefd[i][0]);
-		close(p->pipefd[i][1]);
+		close(pipefd[i][0]);
+		close(pipefd[i][1]);
 		i++;
 	}
+	i = 0;
+	while(i < ac - 3)
+	{
+		waitpid(pid[i], &p->status, 0);
+		i++;
+	}
+
+
+	// waitpid(p->pid1, &p->status, 0);
+	// waitpid(p->pid2, &p->status, 0);
+
+
 	exit_handler(p->status, NULL, p);
 }

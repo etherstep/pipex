@@ -23,6 +23,12 @@
 # include <sys/wait.h>
 # include <unistd.h>
 
+enum pipe
+{
+	READ = 0,
+	WRITE = 1,
+};
+
 typedef struct s_pipex
 {
 	int		fd1;
@@ -30,10 +36,12 @@ typedef struct s_pipex
 	int		fd3;
 	int		fd4;
 	int		status;
-	pid_t	pid1;
-	pid_t	pid2;
+	pid_t	*pid;
+	int		**pipefd;
 	char	*path;
-	int		test;
+	int		pipefd_index;
+	int		pipe_count;
+	int		cmd_count;
 	char	**cmd_args;
 }			t_pipex;
 
