@@ -27,8 +27,9 @@
 # include <signal.h>
 # include <stdbool.h>
 
-# define PIPELINE_LIMIT 512
-
+# ifndef PIPELINE_LIMIT
+#  define PIPELINE_LIMIT 512
+# endif
 
 enum pipe
 {
