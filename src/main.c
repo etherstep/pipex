@@ -187,7 +187,8 @@ void	child_process(t_pipex *p, char *av, char **env)
 {
 	if (p->pipefd_index == 0)
 	{
-		dup2(p->fd1, STDIN_FILENO);
+		if (dup2(p->fd1, STDIN_FILENO) < 0)
+			exit_handler(1, "dup2 failed", p);
 		dup2(p->pipefd[0][WRITE], STDOUT_FILENO);
 	}
 	else if (p->pipefd_index == p->pipe_count)
