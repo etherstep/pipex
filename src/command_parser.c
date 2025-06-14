@@ -2,7 +2,6 @@
 
 void	get_cmd_args(t_pipex *p, char *av_cmd)
 {
-	char	**tokens;
 	char	**args;
 	int		i;
 
@@ -12,22 +11,21 @@ void	get_cmd_args(t_pipex *p, char *av_cmd)
 	i = 0;
 	while (args[i])
 		i++;
-	tokens = ft_calloc(i + 1, sizeof(char *));
-	if (!tokens)
+	p->cmd_args = ft_calloc(i + 1, sizeof(char *));
+	if (!p->cmd_args)
 		free_handler_exit(p, args, NULL, true);
-	tokens[0] = ft_strdup(p->path);
-	if (!tokens[0])
-		free_handler_exit(p, args, tokens, true);
-	i = 0;
+	p->cmd_args[0] = ft_strdup(p->path);
+	if (!p->cmd_args[0])
+		free_handler_exit(p, args, p->cmd_args, true);
+	i = 1;
 	while (args[i])
 	{
-		tokens[i] = ft_strdup(args[i]);
-		if (!tokens[i++])
-			free_handler_exit(p, args, tokens, true);
+		p->cmd_args[i] = ft_strdup(args[i]);
+		if (!p->cmd_args[i++])
+			free_handler_exit(p, args, p->cmd_args, true);
 	}
-	tokens[i] = NULL;
-	p->cmd_args = tokens;
-	free(args);
+	p->cmd_args[i] = NULL;
+	free_handler_exit(p, args, NULL, false);
 }
 
 char	**parse_paths(char **env)
@@ -87,11 +85,6 @@ void	get_bin_path(t_pipex *p, char *av_index, char **env)
 			free_handler_exit(p, NULL, NULL, true);
 		return ;
 	}
-	if (ft_strchr(av_index, '/'))
-	{
-		free_handler_exit(p, NULL, NULL, false);
-		return ;
-	}
 	env_paths = parse_paths(env);
 	if (!env_paths)
 		exit_handler(127, "Error", p);
@@ -102,11 +95,8 @@ void	get_bin_path(t_pipex *p, char *av_index, char **env)
 	if (!cmd)
 		free_handler_exit(p, env_paths, args, true);
 	p->path = find_bin_in_path(env_paths, cmd);
-	if (!p->path)
-	{
-		free(cmd);
-		free_handler_exit(p, env_paths, args, true);
-	}
 	free(cmd);
+	if (!p->path)
+		free_handler_exit(p, env_paths, args, true);
 	free_handler_exit(p, env_paths, args, false);
 }

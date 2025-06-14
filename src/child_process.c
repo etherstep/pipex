@@ -2,13 +2,21 @@
 
 static void open_handler(t_pipex *p, char *av)
 {
-    p->fd_cmd = open(av, O_DIRECTORY);
-    if (p->fd_cmd  >= 0)
-    {
-        if (close(p->fd_cmd) < 0)
-            exit_handler(errno, "close failed", p);
-        exit_handler(21, av, p);
-    }
+    p->fd_cmd = open(av, O_RDONLY);
+    if (p->fd_cmd < 0)
+	{
+		if (errno == EISDIR)
+			ft_printf(STDERR_FILENO, "%s: Is a directory\n", av);
+		else if (errno == ENOTDIR)
+			ft_printf(STDERR_FILENO, "%s: Not a directory\n", av);
+		else if (errno == EACCES)
+			ft_printf(STDERR_FILENO, "%s: Permission denied\n", av);
+		else if (errno == ENOENT && (ft_strchr(av, '/') || ft_strchr(av, '\\')))
+		{
+			ft_printf(STDERR_FILENO, "%s: No such file or directory\n", av);
+			exit_handler(1, NULL, p);
+		}
+	}
 }
 
 static void	pipe_cleanup(t_pipex *p)

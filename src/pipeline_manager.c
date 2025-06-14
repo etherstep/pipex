@@ -57,7 +57,7 @@ static void spawn_child_processes(t_pipex *p, char **av, char **env)
     int i;
 
 	i = 0;
-	while (i < p->cmd_count && i < PIPELINE_LIMIT)
+	while (i < p->cmd_count)
 	{
 		p->pipe_index = i;
 		p->pid[i] = fork();
@@ -72,6 +72,8 @@ static void spawn_child_processes(t_pipex *p, char **av, char **env)
 void	execute_pipeline(t_pipex *p, int ac, char **av, char **env)
 {
 	p->cmd_count = ac - 3;
+	if (p->cmd_count > PIPELINE_LIMIT)
+		exit_handler(errno, "Error: too many pipes...", p);
 	p->pipe_count = p->cmd_count - 1;
 	p->pid = ft_calloc(p->cmd_count, sizeof(int));
 	if (!p->pid)

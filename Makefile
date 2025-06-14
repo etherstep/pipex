@@ -43,7 +43,9 @@ RESET		:= $(shell tput sgr0)
 
 # ============================== SOURCE FILES ================================ #
 
-SRCS		:=	main.c process.c child.c utility.c parsing.c
+SRCS		:=	main.c child_process.c cleanup_utils.c \
+				command_parser.c pipeline_manager.c
+				
 OBJS		:=	$(addprefix $(OBJ_DIR)/,$(SRCS:.c=.o))
 
 # ============================== PROGRESS TRACKING =========================== #

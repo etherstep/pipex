@@ -22,8 +22,8 @@
 # include <sys/types.h>
 # include <sys/wait.h>
 # include <unistd.h>
-# include <asm-generic/errno-base.h>
-# include <asm-generic/errno.h>
+// # include <asm-generic/errno-base.h>
+// # include <asm-generic/errno.h>
 # include <signal.h>
 # include <stdbool.h>
 
