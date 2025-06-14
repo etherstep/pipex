@@ -188,24 +188,31 @@ void	child_process(t_pipex *p, char *av, char **env)
 	if (p->pipefd_index == 0)
 	{
 		if (dup2(p->fd1, STDIN_FILENO) < 0)
-			exit_handler(1, "dup2 failed", p);
-		dup2(p->pipefd[0][WRITE], STDOUT_FILENO);
+		    exit_handler(errno, "dup2 failed", p);
+		if (dup2(p->pipefd[0][WRITE], STDOUT_FILENO) < 0)
+		    exit_handler(errno, "dup2 failed", p);
 	}
 	else if (p->pipefd_index == p->pipe_count)
 	{
-		dup2(p->pipefd[p->pipefd_index - 1][READ], STDIN_FILENO);
-		dup2(p->fd2, STDOUT_FILENO);
+		if (dup2(p->pipefd[p->pipefd_index - 1][READ], STDIN_FILENO) < 0)
+		    exit_handler(errno, "dup2 failed", p);
+		if (dup2(p->fd2, STDOUT_FILENO) < 0)
+		    exit_handler(errno, "dup2 failed", p);
 	}
 	else
 	{
-		dup2(p->pipefd[p->pipefd_index - 1][READ], STDIN_FILENO);
-		dup2(p->pipefd[p->pipefd_index][WRITE], STDOUT_FILENO);
+		if (dup2(p->pipefd[p->pipefd_index - 1][READ], STDIN_FILENO) < 0)
+		    exit_handler(errno, "dup2 failed", p);
+		if (dup2(p->pipefd[p->pipefd_index][WRITE], STDOUT_FILENO) < 0)
+		    exit_handler(errno, "dup2 failed", p);
 	}
 	int i = 0;
 	while (i < p->cmd_count - 1)
 	{
-		close(p->pipefd[i][READ]);
-		close(p->pipefd[i][WRITE]);
+		if (close(p->pipefd[i][READ]) < 0)
+			exit_handler(errno, "close failed", p);
+		if (close(p->pipefd[i][WRITE]) < 0)
+			exit_handler(errno, "close failed", p);
 		i++;
 	}
 	get_bin_path(p, av, env);
@@ -214,7 +221,8 @@ void	child_process(t_pipex *p, char *av, char **env)
 	p->cmd_args = get_cmd_args(p, av);
 	if (!p->cmd_args)
 		exit_handler(127, "Error", p);
-	execve(p->path, p->cmd_args, env);
+	if (execve(p->path, p->cmd_args, env) < 0)
+		exit_handler(errno, "execve failed", p);
 	exit(errno);
 }
 
