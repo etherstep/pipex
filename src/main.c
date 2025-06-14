@@ -32,10 +32,6 @@ void	exit_handler(int code, char *param1, void *param2)
 			close(p->fd1);
 		if (p->fd2 >= 0)
 			close(p->fd2);
-		if (p->fd3 >= 0)
-			close(p->fd3);
-		if (p->fd4 >= 0)
-			close(p->fd4);
 		if (p->path)
 			free(p->path);
 		i = 0;
@@ -297,14 +293,7 @@ int	main(int ac, char **av, char **env)
 		p->pipe_index = i;
 		p->pid[i] = fork();
 		if (p->pid[i] == 0)
-		{
-			if (p->pipe_index == 0)
-				child_process(p, av[i + 2], env);
-			else if (p->pipe_index == p->pipe_count)
-				child_process(p, av[i + 2], env);
-			else
-				child_process(p, av[i + 2], env);
-		}
+			child_process(p, av[i + 2], env);
 		else
 		{
 			if (i > 0)
