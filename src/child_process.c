@@ -11,7 +11,22 @@ static void open_handler(t_pipex *p, char *av)
     }
 }
 
-void	child_process(t_pipex *p, char *av, char **env)
+static void	pipe_cleanup(t_pipex *p)
+{
+	int	i;
+
+	i = 0;
+	while (i < p->pipe_count)
+	{
+		if (close(p->pipefd[i][READ]) < 0)
+			exit_handler(errno, "close failed", p);
+		if (close(p->pipefd[i][WRITE]) < 0)
+			exit_handler(errno, "close failed", p);
+		i++;
+	}
+}
+
+static void	setup_pipes(t_pipex *p)
 {
 	if (p->pipe_index == 0)
 	{
@@ -30,19 +45,16 @@ void	child_process(t_pipex *p, char *av, char **env)
 	else
 	{
 		if (dup2(p->pipefd[p->pipe_index - 1][READ], STDIN_FILENO) < 0)
-		    exit_handler(errno, "dup2 failed", p);
+		    exit_handler(errno, "dup2 (stdin) failed", p);
 		if (dup2(p->pipefd[p->pipe_index][WRITE], STDOUT_FILENO) < 0)
-		    exit_handler(errno, "dup2 failed", p);
+		    exit_handler(errno, "dup2 (stdout) failed", p);
 	}
-	int i = 0;
-	while (i < p->pipe_count)
-	{
-		if (close(p->pipefd[i][READ]) < 0)
-			exit_handler(errno, "close failed", p);
-		if (close(p->pipefd[i][WRITE]) < 0)
-			exit_handler(errno, "close failed", p);
-		i++;
-	}
+}
+
+void	child_process(t_pipex *p, char *av, char **env)
+{
+	setup_pipes(p);
+	pipe_cleanup(p);
     open_handler(p, av);
 	get_bin_path(p, av, env);
 	get_cmd_args(p, av);
