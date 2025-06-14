@@ -57,7 +57,7 @@ static void spawn_child_processes(t_pipex *p, char **av, char **env)
     int i;
 
 	i = 0;
-	while (i < p->cmd_count)
+	while (i < p->cmd_count && i < PIPELINE_LIMIT)
 	{
 		p->pipe_index = i;
 		p->pid[i] = fork();
