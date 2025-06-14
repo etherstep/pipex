@@ -207,8 +207,8 @@ void	child_process(t_pipex *p, char *av, char **env)
 	int i = 0;
 	while (i < p->cmd_count - 1)
 	{
-		close(p->pipefd[i][0]);
-		close(p->pipefd[i][1]);
+		close(p->pipefd[i][READ]);
+		close(p->pipefd[i][WRITE]);
 		i++;
 	}
 	get_bin_path(p, av, env);
@@ -294,13 +294,13 @@ int	main(int ac, char **av, char **env)
 	i = 0;
 	while (i < p->cmd_count)
 	{
-		p->pipefd_index = i;
+		p->pipe_index = i;
 		p->pid[i] = fork();
 		if (p->pid[i] == 0)
 		{
-			if (i == 0)
+			if (p->pipe_index == 0)
 				child_process(p, av[i + 2], env);
-			else if (i == p->cmd_count - 1)
+			else if (p->pipe_index == p->pipe_count)
 				child_process(p, av[i + 2], env);
 			else
 				child_process(p, av[i + 2], env);
@@ -309,8 +309,8 @@ int	main(int ac, char **av, char **env)
 		{
 			if (i > 0)
 			{
-				close(p->pipefd[i - 1][0]);
-				close(p->pipefd[i - 1][1]);
+				close(p->pipefd[i - 1][READ]);
+				close(p->pipefd[i - 1][WRITE]);
 			}
 		}
 		i++;
@@ -323,8 +323,8 @@ int	main(int ac, char **av, char **env)
 	i = 0;
 	while (i < p->pipe_count)
 	{
-		close(p->pipefd[i][0]);
-		close(p->pipefd[i][1]);
+		close(p->pipefd[i][READ]);
+		close(p->pipefd[i][WRITE]);
 		i++;
 	}
 	exit_handler(p->status, NULL, p);
