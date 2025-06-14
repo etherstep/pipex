@@ -31,15 +31,14 @@ enum pipe
 
 typedef struct s_pipex
 {
-	int		fd1;
-	int		fd2;
-	int		fd3;
-	int		fd4;
+	int		infile;
+	int		outfile;
+	int		fd_cmd;
 	int		status;
 	pid_t	*pid;
 	int		**pipefd;
 	char	*path;
-	int		pipefd_index;
+	int		pipe_index;
 	int		pipe_count;
 	int		cmd_count;
 	char	**cmd_args;
