@@ -72,7 +72,7 @@ void	free_handler_exit(t_pipex *p, char **array1, char **array2, bool status)
 	return ;
 }
 
-char	**get_cmd_args(t_pipex *p, char *av_cmd)
+void	get_cmd_args(t_pipex *p, char *av_cmd)
 {
 	char	**tokens;
 	char	**args;
@@ -84,7 +84,7 @@ char	**get_cmd_args(t_pipex *p, char *av_cmd)
 	i = 0;
 	while (args[i])
 		i++;
-	tokens = malloc((i + 1) * sizeof(char *));
+	tokens = ft_calloc(i + 1, sizeof(char *));
 	if (!tokens)
 		free_handler_exit(p, args, NULL, true);
 	tokens[0] = ft_strdup(p->path);
@@ -98,8 +98,8 @@ char	**get_cmd_args(t_pipex *p, char *av_cmd)
 			free_handler_exit(p, args, tokens, true);
 	}
 	tokens[i] = NULL;
+	p->cmd_args = tokens
 	free(args);
-	return (tokens);
 }
 
 char	**parse_paths(char **env)
@@ -216,11 +216,7 @@ void	child_process(t_pipex *p, char *av, char **env)
 		i++;
 	}
 	get_bin_path(p, av, env);
-	if (!p->path)
-		exit_handler(127, "Error", p);
-	p->cmd_args = get_cmd_args(p, av);
-	if (!p->cmd_args)
-		exit_handler(127, "Error", p);
+	get_cmd_args(p, av);
 	if (execve(p->path, p->cmd_args, env) < 0)
 		exit_handler(errno, "execve failed", p);
 	exit(errno);
