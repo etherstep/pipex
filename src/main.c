@@ -11,14 +11,6 @@
 /* ************************************************************************** */
 
 #include "pipex.h"
-//#include <asm-generic/errno-base.h>
-//#include <asm-generic/errno.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 static void	handle_open_error(char *filename, t_pipex *p)
 {
