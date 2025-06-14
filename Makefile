@@ -43,7 +43,7 @@ RESET		:= $(shell tput sgr0)
 
 # ============================== SOURCE FILES ================================ #
 
-SRCS		:=	main.c
+SRCS		:=	main.c process.c child.c utility.c parsing.c
 OBJS		:=	$(addprefix $(OBJ_DIR)/,$(SRCS:.c=.o))
 
 # ============================== PROGRESS TRACKING =========================== #

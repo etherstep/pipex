@@ -44,4 +44,10 @@ typedef struct s_pipex
 	char	**cmd_args;
 }			t_pipex;
 
+void	execute_pipeline(t_pipex *p, int ac, char **av, char **env);
+void	exit_handler(int code, char *param1, void *param2);
+void	free_handler_exit(t_pipex *p, char **array1, char **array2, bool status);
+void	child_process(t_pipex *p, char *av, char **env);
+void	get_cmd_args(t_pipex *p, char *av_cmd);
+void	get_bin_path(t_pipex *p, char *av_index, char **env);
 #endif // PIPEX_H
