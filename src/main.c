@@ -14,6 +14,10 @@
 
 static void	heredoc(t_pipex *p, char **av)
 {
+		char	*input;
+		int		len;
+
+		len = ft_strlen(av[2]);
 		p->is_heredoc = true;
 		p->infile = open("heredoc_.txt", O_RDWR | O_CREAT | O_EXCL, 0600);
 		if (p->infile < 0)
@@ -23,12 +27,12 @@ static void	heredoc(t_pipex *p, char **av)
 			input = get_next_line(STDIN_FILENO);
 			if (!input)
 				break ;
-			if (ft_strncmp(input, av[2], ft_strlen(av[2])) == 0 && input[ft_strlen(av[2])] == '\n')
+			if (ft_strncmp(input, av[2], len) == 0 && input[len] == '\n')
 			{
 				free(input);
 				break ;
 			}
-			if (!write(p->infile, input, ft_strlen(input)))
+			if (write(p->infile, input, ft_strlen(input)) < 0)
     			perror("write");
 			free(input);
 		}
@@ -56,7 +60,6 @@ static void	handle_open_error(char *filename, t_pipex *p)
 int	main(int ac, char **av, char **env)
 {
 	t_pipex	*p;
-	char	*input;
 
 	if (ac < 5)
 		exit_handler(1, "Error: Invalid amount of arguments!", NULL);
