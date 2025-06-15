@@ -12,6 +12,32 @@
 
 #include "pipex.h"
 
+static void	heredoc(t_pipex *p, char **av)
+{
+		p->is_heredoc = true;
+		p->infile = open("heredoc_.txt", O_RDWR | O_CREAT | O_EXCL, 0600);
+		if (p->infile < 0)
+			handle_open_error(av[1], p);
+		while (true)
+		{
+			input = get_next_line(STDIN_FILENO);
+			if (!input)
+				break ;
+			if (ft_strncmp(input, av[2], ft_strlen(av[2])) == 0 && input[ft_strlen(av[2])] == '\n')
+			{
+				free(input);
+				break ;
+			}
+			if (!write(p->infile, input, ft_strlen(input)))
+    			perror("write");
+			free(input);
+		}
+		close(p->infile);
+		p->infile = open("heredoc_.txt", O_RDONLY);
+		if (p->infile < 0)
+			handle_open_error(av[1], p);
+}
+
 static void	handle_open_error(char *filename, t_pipex *p)
 {
 	if (errno == EISDIR)
@@ -37,32 +63,8 @@ int	main(int ac, char **av, char **env)
 	p = ft_calloc(1, sizeof(t_pipex));
 	if (!p)
 		exit_handler(1, "allocation failed", NULL);
-
 	if (ft_strncmp(av[1], "here_doc", 8) == 0)
-	{
-		p->is_heredoc = true;
-		p->infile = open("heredoc_.txt", O_RDWR | O_CREAT | O_EXCL, 0600);
-		if (p->infile < 0)
-			handle_open_error(av[1], p);
-		while (true)
-		{
-			input = get_next_line(STDIN_FILENO);
-			if (!input)
-				break ;
-			if (ft_strncmp(input, av[2], ft_strlen(av[2])) == 0 && input[ft_strlen(av[2])] == '\n')
-			{
-				free(input);
-				break ;
-			}
-			if (!write(p->infile, input, ft_strlen(input)))
-    			perror("write");
-			free(input);
-		}
-		close(p->infile);
-		p->infile = open("heredoc_.txt", O_RDONLY);
-		if (p->infile < 0)
-			handle_open_error(av[1], p);
-	}
+		heredoc(p, av);
 	else
 	{
 		p->is_heredoc = false;
