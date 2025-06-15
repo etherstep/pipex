@@ -12,6 +12,21 @@
 
 #include "pipex.h"
 
+static void	handle_open_error(char *filename, t_pipex *p)
+{
+	if (errno == EISDIR)
+		ft_printf(STDERR_FILENO, "%s: Is a directory\n", filename);
+	else if (errno == ENOTDIR)
+		ft_printf(STDERR_FILENO, "%s: Not a directory\n", filename);
+	else if (errno == EACCES)
+		ft_printf(STDERR_FILENO, "%s: Permission denied\n", filename);
+	else if (errno == ENOENT)
+	{
+		ft_printf(STDERR_FILENO, "%s: No such file or directory\n", filename);
+		exit_handler(1, NULL, p);
+	}
+}
+
 static void	heredoc(t_pipex *p, char **av)
 {
 		char	*input;
@@ -40,21 +55,6 @@ static void	heredoc(t_pipex *p, char **av)
 		p->infile = open("heredoc_.txt", O_RDONLY);
 		if (p->infile < 0)
 			handle_open_error(av[1], p);
-}
-
-static void	handle_open_error(char *filename, t_pipex *p)
-{
-	if (errno == EISDIR)
-		ft_printf(STDERR_FILENO, "%s: Is a directory\n", filename);
-	else if (errno == ENOTDIR)
-		ft_printf(STDERR_FILENO, "%s: Not a directory\n", filename);
-	else if (errno == EACCES)
-		ft_printf(STDERR_FILENO, "%s: Permission denied\n", filename);
-	else if (errno == ENOENT)
-	{
-		ft_printf(STDERR_FILENO, "%s: No such file or directory\n", filename);
-		exit_handler(1, NULL, p);
-	}
 }
 
 int	main(int ac, char **av, char **env)
