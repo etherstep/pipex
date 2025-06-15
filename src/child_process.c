@@ -63,7 +63,7 @@ void	child_process(t_pipex *p, char *av, char **env)
 {
 	setup_pipes(p);
 	pipe_cleanup(p);
-    open_handler(p, av);
+ open_handler(p, av);
 	get_bin_path(p, av, env);
 	get_cmd_args(p, av);
 	if (execve(p->path, p->cmd_args, env) < 0)
