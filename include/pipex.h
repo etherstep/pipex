@@ -50,6 +50,7 @@ typedef struct s_pipex
 	int		pipe_count;
 	int		cmd_count;
 	char	**cmd_args;
+	bool	is_heredoc;
 }			t_pipex;
 
 void	execute_pipeline(t_pipex *p, int ac, char **av, char **env);

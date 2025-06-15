@@ -5,7 +5,7 @@ void	exit_handler(int code, char *param1, void *param2)
 	t_pipex	*p;
 	int		i;
 
-	p = (t_pipex *)param2;
+	p = param2;
 	if (p)
 	{
 		if (p->infile >= 0)
@@ -33,6 +33,9 @@ void	exit_handler(int code, char *param1, void *param2)
             }
             free(p->pipefd);
         }
+		if (p->is_heredoc == true)
+			if (unlink("./heredoc_.txt") == -1)
+    			ft_printf(STDERR_FILENO, "unlink failed\n");
 	}
 	if (param1)
 	{
