@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipex.h                                            :+:      :+:    :+:   */
+/*   pipex_bonus.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jpelline <jpelline@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/27 22:20:34 by jpelline          #+#    #+#             */
-/*   Updated: 2025/05/27 22:21:24 by jpelline         ###   ########.fr       */
+/*   Updated: 2025/06/16 20:37:22 by jpelline         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef PIPEX_H
-# define PIPEX_H
+#ifndef PIPEX_BONUS_H
+# define PIPEX_BONUS_H
 
 # include "libft.h"
 # include <errno.h>
@@ -52,4 +52,4 @@ void	free_arrays(char **array1, char **array2);
 void	get_cmd_args(t_pipex *p, char *av_cmd);
 void	get_bin_path(t_pipex *p, char *av_index, char **env);
 
-#endif // PIPEX_H
+#endif // PIPEX_BONUS_H
