@@ -40,7 +40,7 @@ void	get_cmd_args(t_pipex *p, char *av_cmd)
 	free_exit(p, args, NULL, false);
 }
 
-char	**parse_paths(char **env)
+static char	**parse_paths(char **env)
 {
 	char	**env_paths;
 	int		i;

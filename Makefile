@@ -19,10 +19,10 @@ NAME		:= pipex_standard
 endif
 
 PROGRAM_NAME	:= pipex
-CC			:=	cc
-CFLAGS		:=	-Wextra -Wall -Werror
-DEBUG_FLAGS	:=	-g3 -fsanitize=address -fsanitize=undefined
-OPTFLAGS	:=	-O2
+CC		:= cc
+CFLAGS		:= -Wextra -Wall -Werror
+DEBUG_FLAGS	:= -g3 -fsanitize=address -fsanitize=undefined
+OPTFLAGS	:= -O2
 
 
 ifeq ($(MAKECMDGOALS),bonus)
@@ -36,12 +36,12 @@ OBJ_DIR		:= obj
 DEP_DIR		:= $(OBJ_DIR)/.deps
 DEPFLAGS	= -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.d
 
-LIBFT_DIR	:=	libft
-LIBFT		:=	$(LIBFT_DIR)/libft.a
-INC			:= -I./include -I$(LIBFT_DIR)/include
+LIBFT_DIR	:= libft
+LIBFT		:= $(LIBFT_DIR)/libft.a
+INC		:= -I./include -I$(LIBFT_DIR)/include
 INC_BONUS	:= -I./include_bonus -I$(LIBFT_DIR)/include
 
-LDFLAGS		:=	-L$(LIBFT_DIR) -lft
+LDFLAGS		:= -L$(LIBFT_DIR) -lft
 
 MARKER_STANDARD := .standard_build
 MARKER_BONUS	:= .bonus_build
@@ -59,11 +59,11 @@ RESET		:= $(shell tput sgr0)
 
 # ============================== SOURCE FILES ================================ #
 
-SRCS		:=	main.c child_process.c cleanup_utils.c \
-				command_parser.c pipeline_manager.c
+SRCS		:= main.c child_process.c cleanup_utils.c \
+		command_parser.c pipeline_manager.c
 
-SRCS_BONUS	:=	main_bonus.c child_process_bonus.c cleanup_utils_bonus.c \
-				command_parser_bonus.c pipeline_manager_bonus.c
+SRCS_BONUS	:= main_bonus.c child_process_bonus.c cleanup_utils_bonus.c \
+		command_parser_bonus.c pipeline_manager_bonus.c
 
 # ============================== PROGRESS TRACKING =========================== #
 
@@ -75,11 +75,11 @@ OBJS		:= $(addprefix $(OBJ_DIR)/,$(SRCS:.c=.o))
 TOTAL_SRCS	:= $(words $(SRCS))
 endif
 
-WAS_BONUS := $(shell [ -f "$(MARKER_BONUS)" ] && echo yes)
+WAS_BONUS	:= $(shell [ -f "$(MARKER_BONUS)" ] && echo yes)
 
-PROGRESS_FILE := $(OBJ_DIR)/.progress
+PROGRESS_FILE	:= $(OBJ_DIR)/.progress
 
-LATEST_SRC := $(shell ls -t $(SRC_DIR)/*.c 2>/dev/null | head -n1)
+LATEST_SRC	:= $(shell ls -t $(SRC_DIR)/*.c 2>/dev/null | head -n1)
 
 OBJ_FILES_EXIST := $(shell [ -n "$(wildcard $(OBJ_DIR)/*.o)" ] && echo yes)
 
