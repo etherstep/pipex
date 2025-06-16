@@ -52,7 +52,7 @@ static void	setup_pipes(t_pipex *p)
 	{
 		if (p->infile != -1 && dup2(p->infile, STDIN_FILENO) < 0)
 			exit_handler(errno, "dup2 (stdin) failed", p);
-		if (dup2(p->pipefd[0][WRITE], STDOUT_FILENO) < 0)
+		if (dup2(p->pipefd[p->pipe_index][WRITE], STDOUT_FILENO) < 0)
 			exit_handler(errno, "dup2 (stdout) failed", p);
 	}
 	else if (p->pipe_index == p->pipe_count)

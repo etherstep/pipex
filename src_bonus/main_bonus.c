@@ -66,20 +66,13 @@ static void	heredoc(t_pipex *p, char **av)
 		handle_open_error(av[1], p);
 }
 
-static void	open_input_files(t_pipex *p, int ac, char **av)
+static void	open_input_files(t_pipex *p, char **av)
 {
 	p->is_heredoc = false;
 	p->infile = open(av[1], O_RDONLY);
 	if (p->infile < 0)
 		handle_open_error(av[1], p);
-	if (p->is_heredoc == true)
-		p->outfile = open(av[ac - 1], O_WRONLY | O_APPEND | O_CREAT, 0644);
-	else
-		p->outfile = open(av[ac - 1], O_WRONLY | O_TRUNC | O_CREAT, 0644);
-	if (p->outfile < 0)
-		handle_open_error(av[ac - 1], p);
-	else if (p->infile < 0)
-		exit_handler(0, NULL, p);
+
 }
 
 int	main(int ac, char **av, char **env)
@@ -94,7 +87,15 @@ int	main(int ac, char **av, char **env)
 	if (ft_strncmp(av[1], "here_doc", 8) == 0)
 		heredoc(p, av);
 	else
-		open_input_files(p, ac, av);
+		open_input_files(p, av);
+	if (p->is_heredoc == true)
+		p->outfile = open(av[ac - 1], O_WRONLY | O_APPEND | O_CREAT, 0644);
+	else
+		p->outfile = open(av[ac - 1], O_WRONLY | O_TRUNC | O_CREAT, 0644);
+	if (p->outfile < 0)
+		handle_open_error(av[ac - 1], p);
+	else if (p->infile < 0)
+		exit_handler(0, NULL, p);
 	execute_pipeline(p, ac, av, env);
 	exit_handler(WEXITSTATUS(p->status), NULL, p);
 }

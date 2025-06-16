@@ -34,9 +34,6 @@ static void	free_struct(t_pipex *p)
 				free(p->pipefd[i++]);
 			free(p->pipefd);
 		}
-		if (p->is_heredoc == true)
-			if (unlink("./heredoc_.txt") == -1)
-				ft_printf(STDERR_FILENO, "unlink failed\n");
 		free(p);
 	}
 }

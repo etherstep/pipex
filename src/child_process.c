@@ -50,7 +50,7 @@ static void	setup_pipes(t_pipex *p)
 {
 	if (p->pipe_index == 0)
 	{
-		if (p->infile != -1 && dup2(p->infile, STDIN_FILENO) < 0)
+		if (dup2(p->infile, STDIN_FILENO) < 0)
 			exit_handler(errno, "dup2 (stdin) failed", p);
 		if (dup2(p->pipefd[p->pipe_index][WRITE], STDOUT_FILENO) < 0)
 			exit_handler(errno, "dup2 (stdout) failed", p);
@@ -59,14 +59,7 @@ static void	setup_pipes(t_pipex *p)
 	{
 		if (dup2(p->pipefd[p->pipe_index - 1][READ], STDIN_FILENO) < 0)
 			exit_handler(errno, "dup2 (stdin) failed", p);
-		if (p->outfile != -1 && dup2(p->outfile, STDOUT_FILENO) < 0)
-			exit_handler(errno, "dup2 (stdout) failed", p);
-	}
-	else
-	{
-		if (dup2(p->pipefd[p->pipe_index - 1][READ], STDIN_FILENO) < 0)
-			exit_handler(errno, "dup2 (stdin) failed", p);
-		if (dup2(p->pipefd[p->pipe_index][WRITE], STDOUT_FILENO) < 0)
+		if (dup2(p->outfile, STDOUT_FILENO) < 0)
 			exit_handler(errno, "dup2 (stdout) failed", p);
 	}
 }
