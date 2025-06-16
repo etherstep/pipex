@@ -66,13 +66,12 @@ static void	heredoc(t_pipex *p, char **av)
 		handle_open_error(av[1], p);
 }
 
-static void	open_input_files(t_pipex *p, char **av)
+static void	open_infile(t_pipex *p, char **av)
 {
 	p->is_heredoc = false;
 	p->infile = open(av[1], O_RDONLY);
 	if (p->infile < 0)
 		handle_open_error(av[1], p);
-
 }
 
 int	main(int ac, char **av, char **env)
@@ -87,7 +86,7 @@ int	main(int ac, char **av, char **env)
 	if (ft_strncmp(av[1], "here_doc", 8) == 0)
 		heredoc(p, av);
 	else
-		open_input_files(p, av);
+		open_infile(p, av);
 	if (p->is_heredoc == true)
 		p->outfile = open(av[ac - 1], O_WRONLY | O_APPEND | O_CREAT, 0644);
 	else
