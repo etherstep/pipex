@@ -13,16 +13,16 @@
 # ============================== CONFIGURATION =============================== #
 
 ifeq ($(MAKECMDGOALS),bonus)
-NAME_BONUS	:= pipex_bonus
+NAME_BONUS		:= pipex_bonus
 else
-NAME		:= pipex_standard
+NAME			:= pipex_standard
 endif
 
 PROGRAM_NAME	:= pipex
-CC		:= cc
-CFLAGS		:= -Wextra -Wall -Werror
-DEBUG_FLAGS	:= -g3 -fsanitize=address -fsanitize=undefined
-OPTFLAGS	:= -O2
+CC				:= cc
+CFLAGS			:= -Wextra -Wall -Werror
+DEBUG_FLAGS		:= -g3 -fsanitize=address -fsanitize=undefined
+OPTFLAGS		:= -O2
 
 
 ifeq ($(MAKECMDGOALS),bonus)
@@ -38,7 +38,7 @@ DEPFLAGS	= -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.d
 
 LIBFT_DIR	:= libft
 LIBFT		:= $(LIBFT_DIR)/libft.a
-INC		:= -I./include -I$(LIBFT_DIR)/include
+INC			:= -I./include -I$(LIBFT_DIR)/include
 INC_BONUS	:= -I./include_bonus -I$(LIBFT_DIR)/include
 
 LDFLAGS		:= -L$(LIBFT_DIR) -lft
@@ -165,14 +165,15 @@ $(NAME_BONUS): $(OBJS_BONUS) $(LIBFT)
 	@echo ">$(BOLD)$(GREEN)  $(NAME_BONUS) successfully compiled!$(RESET)"
 	@rm -f $(PROGRESS_FILE)
 
-ifeq ($(MAKECMDGOALD),bonus)
-$(OBJ_DIR)/%.o: $(SRC_B_DIR)/%.c | $(OBJ_DIR) $(DEP_DIR)
+ifeq ($(MAKECMDGOALS),bonus)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR) $(DEP_DIR)
 	@touch $(PROGRESS_FILE)
-	$(eval COMPILED_COUNT := $(shell echo $$(($(COMPILED_COUNT)+1))))
-	$(eval PROGRESS := $(shell echo $$(($(COMPILED_COUNT)*100/$(TOTAL_SRCS)))))
-	@if [ $$(($(PROGRESS) % 1)) -eq 0 ] || [ $(PROGRESS) -eq 100 ]; then \
-		printf ">   [%3d%%] $(CYAN)Compiling... (%d/%d files)$(RESET)\n" \
-			$(PROGRESS) $(COMPILED_COUNT) $(TOTAL_SRCS); \
+	@if [ -f $(PROGRESS_FILE) ]; then \
+		CURRENT=$$(cat $(PROGRESS_FILE)); \
+		NEXT=$$((CURRENT + 1)); \
+		echo "$$NEXT" > $(PROGRESS_FILE); \
+		printf ">   [%3d%%] $(CYAN)(%d/%d files) Compiling $<... $(RESET)\n" \
+			$$((NEXT*100/$(TOTAL_SRCS))) $$((NEXT)) $(TOTAL_SRCS); \
 	fi
 	@$(CC) $(CFLAGS) $(DEPFLAGS) $(OPTFLAGS) -c $< -o $@ $(INC_BONUS)
 endif
