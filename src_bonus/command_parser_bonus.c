@@ -40,16 +40,26 @@ void	get_cmd_args(t_pipex *p, char *av_cmd)
 	free_exit(p, args, NULL, false);
 }
 
-char	**parse_paths(char **env)
+static char	**parse_paths(char **env)
 {
 	char	**env_paths;
 	int		i;
+	int		check;
 
+	check = 0;
 	i = 0;
-	while (env[i++])
+	if (!env)
+		return (NULL);
+	while (env[i])
+	{
 		if (ft_strnstr(env[i], "PATH=", 5))
+		{
+			check = 1;
 			break ;
-	if (ft_strnstr(env[i], "PATH=", 5) == NULL)
+		}
+		i++;
+	}
+	if (check == 0 && ft_strnstr(env[i - 1], "PATH=", 5) == NULL)
 		return (NULL);
 	env_paths = ft_split(env[i] + 5, ':');
 	if (!env_paths)

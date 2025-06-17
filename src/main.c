@@ -24,6 +24,8 @@ static void	handle_open_error(char *filename, t_pipex *p)
 		ft_printf(STDERR_FILENO, "%s: Permission denied\n", filename);
 	else if (errno == ENOENT)
 		ft_printf(STDERR_FILENO, "%s: No such file or directory\n", filename);
+	else
+		ft_printf(STDERR_FILENO, "%s: Error opening\n", filename);
 	if (check == 1)
 		exit_handler(0, NULL, p);
 	check = 1;

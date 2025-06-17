@@ -13,16 +13,16 @@
 # ============================== CONFIGURATION =============================== #
 
 ifeq ($(MAKECMDGOALS),bonus)
-NAME_BONUS		:= pipex_bonus
+NAME_BONUS	:= pipex_bonus
 else
-NAME			:= pipex_standard
+NAME		:= pipex_standard
 endif
 
 PROGRAM_NAME	:= pipex
-CC				:= cc
-CFLAGS			:= -Wextra -Wall -Werror
-DEBUG_FLAGS		:= -g3 -fsanitize=address -fsanitize=undefined
-OPTFLAGS		:= -O2
+CC		:= cc
+CFLAGS		:= -Wextra -Wall -Werror
+DEBUG_FLAGS	:= -g3 -fsanitize=address -fsanitize=undefined
+OPTFLAGS	:= -O2
 
 
 ifeq ($(MAKECMDGOALS),bonus)
@@ -106,12 +106,6 @@ all:
 		echo ">$(BOLD)$(GREEN)  All components built successfully!$(RESET)"; \
 	fi
 
-# Debug target
-debug: CFLAGS += $(DEBUG_FLAGS)
-debug: OPTFLAGS := -O0
-debug: clean $(NAME)
-	@echo "$(BOLD)$(CYAN)  Debug build completed!$(RESET)"
-
 # Main executable target - links all objects and libraries
 $(NAME): $(OBJS) $(LIBFT)
 	@echo ">$(BOLD)$(GREEN)  Linking $(NAME)...$(RESET)"
@@ -120,14 +114,6 @@ $(NAME): $(OBJS) $(LIBFT)
 	@rm -f $(MARKER_BONUS)
 	@rm -f $(PROGRESS_FILE)
 	@echo ">$(BOLD)$(GREEN)  $(NAME) successfully compiled!$(RESET)"
-
-# Create necessary directories if they don't exist
-$(OBJ_DIR):
-	@mkdir -p $(OBJ_DIR)
-	@echo "0" > $(PROGRESS_FILE)
-
-$(DEP_DIR): | $(OBJ_DIR)
-	@mkdir -p $@
 
 # Compilation rule for each source file
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR) $(DEP_DIR)
@@ -140,12 +126,12 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR) $(DEP_DIR)
 	fi
 	@$(CC) $(CFLAGS) $(DEPFLAGS) $(OPTFLAGS) -c $< -o $@ $(INC)
 
-
 # ============================== BONUS TARGETS =============================== #
+
 bonus:
 	@if [ -f $(MARKER_STANDARD) ] && $(is_up_to_date); then \
 		echo ">$(BOLD)$(WHITE) Cleaning standard build...$(RESET)"; \
-		$(MAKE) -s clean; \
+		$(MAKE) -s clean MAKECMDGOALS=bonus; \
 	fi; \
 	if [ -f "$(MARKER_BONUS)" ] && $(is_up_to_date) 2>/dev/null; then \
 		echo ">$(BOLD)$(YELLOW)  $(NAME_BONUS) is already up to date.$(RESET)"; \
@@ -178,13 +164,31 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR) $(DEP_DIR)
 	@$(CC) $(CFLAGS) $(DEPFLAGS) $(OPTFLAGS) -c $< -o $@ $(INC_BONUS)
 endif
 
+# ============================== ADDITIONAL TARGETS =============================== #
+
+# Create necessary directories if they don't exist
+$(OBJ_DIR):
+	@mkdir -p $(OBJ_DIR)
+	@echo "0" > $(PROGRESS_FILE)
+
+$(DEP_DIR): | $(OBJ_DIR)
+	@mkdir -p $@
+
 # Include auto-generated dependency files
 -include $(wildcard $(DEP_DIR)/*.d)
+
+# Debug target
+debug: CFLAGS += $(DEBUG_FLAGS)
+debug: OPTFLAGS := -O0
+debug: clean $(NAME)
+	@echo ">$(BOLD)$(CYAN)  Debug build completed!$(RESET)"
 
 # build libft if needed
 $(LIBFT):
 	@echo ">$(MAGENTA)  Entering libft directory...$(RESET)"
 	@$(MAKE) -C $(LIBFT_DIR) --no-print-directory
+
+# ============================== CLEAN TARGETS =============================== #
 
 # Remove object files and dependency files
 clean:
@@ -195,10 +199,12 @@ clean:
 	else \
 		echo "> [ pipex ] $(BOLD)$(YELLOW) Nothing to be done with $(RESET)$(WHITE)clean$(RESET)"; \
 	fi
-	@if [ -d $(LIBFT_DIR)/$(OBJ_DIR) ]; then \
-		$(MAKE) -C $(LIBFT_DIR) clean --no-print-directory; \
-	else \
-		echo "> [ libft ] $(BOLD)$(YELLOW) Nothing to be done with $(RESET)$(WHITE)clean$(RESET)"; \
+	@if [ "$(MAKECMDGOALS)" != "bonus" ] && [ "$(WAS_BONUS)" != "yes" ]; then \
+		if [ -d $(LIBFT_DIR)/$(OBJ_DIR) ]; then \
+			$(MAKE) -C $(LIBFT_DIR) clean --no-print-directory; \
+		else \
+			echo "> [ libft ] $(BOLD)$(YELLOW) Nothing to be done with $(RESET)$(WHITE)clean$(RESET)"; \
+		fi; \
 	fi
 
 # Remove everything including the executable
