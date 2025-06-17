@@ -31,7 +31,7 @@ static void	handle_open_error(char *filename, t_pipex *p)
 		exit_handler(1, NULL, p);
 }
 
-static void	read_to_tmpfile(t_pipex *p, char **av)
+static void	write_to_tmpfile(t_pipex *p, char **av)
 {
 	char	*input;
 	int		len;
@@ -59,7 +59,7 @@ static void	heredoc(t_pipex *p, char **av)
 	p->infile = open("heredoc_.txt", O_RDWR | O_CREAT | O_EXCL, 0600);
 	if (p->infile < 0)
 		handle_open_error(av[1], p);
-	read_to_tmpfile(p, av);
+	write_to_tmpfile(p, av);
 	close(p->infile);
 	p->infile = open("heredoc_.txt", O_RDONLY);
 	if (p->infile < 0)
